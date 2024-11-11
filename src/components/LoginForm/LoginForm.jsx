@@ -1,61 +1,106 @@
-import { ErrorMessage, Field, Form, Formik } from "formik";
-import * as Yup from 'yup';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import s from './LoginForm.module.css';
-import { useDispatch, useSelector } from "react-redux";
-import { logIn } from "../../redux/auth/operations";
-import { selectIsLoggedIn } from "../../redux/auth/selectors";
-import { Link, Navigate } from "react-router-dom";
+import toast from 'react-hot-toast';
+import { login } from '../../redux/auth/operations.js';
+import { Link } from 'react-router-dom';
+import sprite from '../../icons/icons.svg';
+import { useDispatch, useSelector } from 'react-redux';
+import Loader from '../Loader/Loader';
 
+const loginSchema = yup.object().shape({
+  email: yup.string().email('Invalid email').required('Email is required'),
+  password: yup
+    .string()
+    .min(8, 'Too Short! Please type min 8 symbols')
+    .max(64, 'Too Long! Must be up max 64 symbols')
+    .required('Password is required'),
+});
 
-const LoginForm = () => {
-    const dispatch = useDispatch();
-    const isLoggedIn = useSelector(selectIsLoggedIn);
+const LoginForm = ({ onSuccess }) => {
+  const dispatch = useDispatch();
+  const { isLoading } = useSelector(state => state.auth);
 
-    const validationSchema = Yup.object({
-        email: Yup.string().email('Invalid email address').required('Required'),
-        password: Yup.string().min(6, 'Password must be at least 6 characters').required('Required'),
-    });
-    const initialValues = {
-        email: '',
-        password: '',
-    };
-    const handleSubmit = (values, { resetForm }) => {
-        dispatch(logIn(values));
-        resetForm();
-    };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(loginSchema),
+  });
 
-    if (isLoggedIn) {
-        return <Navigate to='/' />;
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const onSubmit = async data => {
+    setIsSubmitting(true);
+    const result = await dispatch(login(data));
+    if (login.fulfilled.match(result)) {
+      toast.success('Login successful!');
+      onSuccess();
+    } else {
+      if (result.payload?.status === 401) {
+        toast.error('Login failed. Please try again.');
+      } else {
+        toast.error(
+          result.payload || 'Login failed. Please check your credentials.'
+        );
+      }
+      setIsSubmitting(false);
     }
+  };
 
-    return (
-        <div className={s.formContainer}>
-            <Formik
-                initialValues={initialValues}
-                validationSchema={validationSchema}
-                onSubmit={handleSubmit}
-            >
-                <Form autoComplete="off">
-                    <label htmlFor="email">Email
-                        <Field name="email" type="email" id="email" autoComplete="email" />
-                    </label>
-                    <ErrorMessage name="name" component="div" className={s.error} />
-                    <label htmlFor="password">Password
-                        <Field name="password" type="password" id="password" autoComplete="password" />
-                    </label>
-                    <ErrorMessage name="password" component="div" className={s.error} />
+  if (isSubmitting || isLoading) {
+    return <Loader />;
+  }
 
-                    <button type="submit">
-                        Sign in
-                    </button>
-                    <p>
-                        You do not have account?<Link to='/register'>Sign up!</Link>
-                    </p>
-                </Form>
-            </Formik>
-
+  return (
+    <div className={s.container}>
+      {isLoading && <Loader />}
+      <form className={s.loginForm} onSubmit={handleSubmit(onSubmit)}>
+        <div className={s.formTitle}>
+          <Link to="/auth/register" className={s.register}>
+            Registration
+          </Link>
+          <Link to="/auth/login" className={`${s.login} ${s.active}`}>
+            Log In
+          </Link>
         </div>
-    )
+        <input
+          {...register('email')}
+          placeholder="Email"
+          className={errors.email ? s.errorInput : ''}
+        />
+        {errors.email && (
+          <p className={s.errorMessage}>{errors.email.message}</p>
+        )}
+        <div className={s.passwordInput}>
+          <input
+            {...register('password')}
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Create a password"
+            className={errors.password ? s.errorInput : ''}
+          />
+          <span
+            className={s.passwordToggleIcon}
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            <svg className={s.icon}>
+              <use href={`${sprite}#eye-icon`} />
+            </svg>
+          </span>
+        </div>
+        {errors.password && (
+          <p className={s.errorMessage}>{errors.password.message}</p>
+        )}
+        <button className={s.loginButton} type="submit" disabled={isLoading}>
+          Log In Now
+        </button>
+      </form>
+    </div>
+  );
 };
 
 export default LoginForm;

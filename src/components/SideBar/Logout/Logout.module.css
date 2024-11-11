@@ -1,0 +1,37 @@
+.block {
+  display: flex;
+  margin-left: 24px;
+}
+
+.logoutBtn {
+  margin-top: 28px;
+  gap: 14px;
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.logoutIcon {
+  stroke: var(--icon-bg-color);
+  fill: transparent;
+  transition: stroke 0.25s ease;
+}
+
+.logoutText {
+  color: var(--main-text-color);
+  font-family: 'Poppins';
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.logoutBtn {
+  transition: transform 0.25s ease;
+}
+
+.logoutBtn:hover,
+.logoutBtn:focus {
+  transform: translateX(5px);
+}
+
+

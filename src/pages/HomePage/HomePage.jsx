@@ -1,12 +1,13 @@
-import s from './HomePage.module.css'
-import img from '../../images/phoneBookImg.jpg';
-const HomePage = () => {
-    return (
-        <div className={s.wrapper}>
-            <h1>Welcome to the <span>phone book</span> app!</h1>
-            <img src={img} alt="Phone Book" />
-        </div>
-    )
-};
+import Layout from '../../components/Layout/Layout';
+import s from './HomePage.module.css';
+
+const HomePage = () => (
+  <div className={s.homePageContainer}>
+    {/* <Header />
+    <SideBar />
+    <ScreensPage /> */}
+    <Layout />
+  </div>
+);
 
 export default HomePage;
